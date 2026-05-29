@@ -1,0 +1,491 @@
+import React, { useState, useEffect } from 'react';
+
+export default function DailyTaskerApp() {
+
+  const [tasks, setTasks] = useState([]);
+
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+
+    if (typeof window !== 'undefined') {
+
+      const savedTasks = window.localStorage.getItem('daily-tasker-tasks');
+
+      if (savedTasks) {
+
+        setTasks(JSON.parse(savedTasks));
+
+      }
+
+      setIsLoaded(true);
+
+    }
+
+  }, []);
+
+  const [title, setTitle] = useState('');
+
+  const [category, setCategory] = useState('Personal');
+
+  const [priority, setPriority] = useState('Medium');
+
+  const [filter, setFilter] = useState('All');
+
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+
+    if (isLoaded && typeof window !== 'undefined') {
+
+      window.localStorage.setItem(
+
+        'daily-tasker-tasks',
+
+        JSON.stringify(tasks)
+
+      );
+
+    }
+
+  }, [tasks, isLoaded]);
+
+  const addTask = () => {
+
+    if (!title.trim()) return;
+
+    const newTask = {
+
+      id: Date.now(),
+
+      title,
+
+      category,
+
+      completed: false,
+
+      priority,
+
+    };
+
+    setTasks([newTask, ...tasks]);
+
+    setTitle('');
+
+    setCategory('Personal');
+
+    setPriority('Medium');
+
+  };
+
+  const toggleTask = (id) => {
+
+    setTasks(
+
+      tasks.map((task) =>
+
+        task.id === id
+
+          ? { ...task, completed: !task.completed }
+
+          : task
+
+      )
+
+    );
+
+  };
+
+  const deleteTask = (id) => {
+
+    setTasks(tasks.filter((task) => task.id !== id));
+
+  };
+
+  const filteredTasks = tasks.filter((task) => {
+
+    const matchesFilter =
+
+      filter === 'All'
+
+        ? true
+
+        : filter === 'Completed'
+
+        ? task.completed
+
+        : !task.completed;
+
+    const matchesSearch = task.title
+
+      .toLowerCase()
+
+      .includes(search.toLowerCase());
+
+    return matchesFilter && matchesSearch;
+
+  });
+
+  const completedCount = tasks.filter((t) => t.completed).length;
+
+  const targetDate = new Date('2026-07-16');
+
+  const today = new Date();
+
+  const timeDifference = targetDate.getTime() - today.getTime();
+
+  const daysLeft = Math.max(
+
+    0,
+
+    Math.ceil(timeDifference / (1000  60  60 * 24))
+
+  );
+
+  const progress = tasks.length
+
+    ? Math.round((completedCount / tasks.length) * 100)
+
+    : 0;
+
+  const priorityColor = {
+
+    High: 'bg-red-100 text-red-700',
+
+    Medium: 'bg-yellow-100 text-yellow-700',
+
+    Low: 'bg-green-100 text-green-700',
+
+  };
+
+  return (
+
+    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-purple-100 p-6">
+
+      <div className="max-w-5xl mx-auto">
+
+        <div className="bg-white rounded-3xl shadow-xl p-8 mb-6">
+
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+            <div>
+
+              <h1 className="text-4xl font-bold text-gray-800">
+
+                Daily Tasker
+
+              </h1>
+
+              <p className="text-gray-500 mt-2">
+
+                Organize your day and stay productive.
+
+              </p>
+
+            </div>
+
+            <div className="flex flex-col gap-4">
+
+              <div className="bg-indigo-50 rounded-2xl px-6 py-4 min-w-[220px]">
+
+                <div className="flex items-center justify-between mb-2">
+
+                  <span className="text-sm text-gray-600">Progress</span>
+
+                  <span className="font-semibold text-indigo-700">
+
+                    {progress}%
+
+                  </span>
+
+                </div>
+
+                <div className="w-full bg-indigo-100 rounded-full h-3 overflow-hidden">
+
+                  <div
+
+                    className="bg-indigo-600 h-3 rounded-full transition-all duration-500"
+
+                    style={{ width: `${progress}%` }}
+
+                  />
+
+                </div>
+
+              </div>
+
+              <div className="bg-orange-50 rounded-2xl px-6 py-4 border border-orange-100">
+
+                <div className="text-sm text-orange-600 font-medium">
+
+                  Countdown Goal
+
+                </div>
+
+                <div className="text-3xl font-bold text-orange-700 mt-1">
+
+                  {daysLeft} Days Left
+
+                </div>
+
+                <p className="text-sm text-orange-500 mt-2">
+
+                  Stay focused and complete your pending tasks and new skills before 16 July 2026.
+
+                </p>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+          <div className="bg-white rounded-3xl shadow-lg p-6 h-fit">
+
+            <h2 className="text-2xl font-semibold text-gray-800 mb-5">
+
+              Add New Task
+
+            </h2>
+
+            <div className="space-y-4">
+
+              <input
+
+                type="text"
+
+                value={title}
+
+                onChange={(e) => setTitle(e.target.value)}
+
+                placeholder="Enter task title"
+
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
+
+              />
+
+              <select
+
+                value={category}
+
+                onChange={(e) => setCategory(e.target.value)}
+
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
+
+              >
+
+                <option>Personal</option>
+
+                <option>Work</option>
+
+                <option>Health</option>
+
+                <option>Study</option>
+
+              </select>
+
+              <select
+
+                value={priority}
+
+                onChange={(e) => setPriority(e.target.value)}
+
+                className="w-full border border-gray-200 rounded-2xl px-4 py-3 outline-none focus:ring-2 focus:ring-indigo-400"
+
+              >
+
+                <option>High</option>
+
+                <option>Medium</option>
+
+                <option>Low</option>
+
+              </select>
+
+              <button
+
+                onClick={addTask}
+
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl py-3 font-semibold transition"
+
+              >
+
+                Add Task
+
+              </button>
+
+            </div>
+
+          </div>
+
+          <div className="lg:col-span-2 bg-white rounded-3xl shadow-lg p-6">
+
+            <div className="flex flex-col md:flex-row gap-4 md:items-center md:justify-between mb-6">
+
+              <h2 className="text-2xl font-semibold text-gray-800">
+
+                Today’s Tasks
+
+              </h2>
+
+              <div className="flex flex-col md:flex-row gap-3">
+
+                <input
+
+                  type="text"
+
+                  placeholder="Search task..."
+
+                  value={search}
+
+                  onChange={(e) => setSearch(e.target.value)}
+
+                  className="border border-gray-200 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
+
+                />
+
+                <select
+
+                  value={filter}
+
+                  onChange={(e) => setFilter(e.target.value)}
+
+                  className="border border-gray-200 rounded-2xl px-4 py-2 outline-none focus:ring-2 focus:ring-indigo-400"
+
+                >
+
+                  <option>All</option>
+
+                  <option>Completed</option>
+
+                  <option>Pending</option>
+
+                </select>
+
+              </div>
+
+            </div>
+
+            <div className="space-y-4">
+
+              {filteredTasks.length === 0 ? (
+
+                <div className="text-center py-10 text-gray-400">
+
+                  No tasks found.
+
+                </div>
+
+              ) : (
+
+                filteredTasks.map((task) => (
+
+                  <div
+
+                    key={task.id}
+
+                    className={`border rounded-2xl p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4 transition ${
+
+                      task.completed
+
+                        ? 'bg-green-50 border-green-100'
+
+                        : 'bg-gray-50 border-gray-100'
+
+                    }`}
+
+                  >
+
+                    <div className="flex items-start gap-4">
+
+                      <input
+
+                        type="checkbox"
+
+                        checked={task.completed}
+
+                        onChange={() => toggleTask(task.id)}
+
+                        className="mt-1 w-5 h-5"
+
+                      />
+
+                      <div>
+
+                        <h3
+
+                          className={`font-semibold text-lg ${
+
+                            task.completed
+
+                              ? 'line-through text-gray-400'
+
+                              : 'text-gray-800'
+
+                          }`}
+
+                        >
+
+                          {task.title}
+
+                        </h3>
+
+                        <div className="flex items-center gap-3 mt-2 flex-wrap">
+
+                          <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-sm">
+
+                            {task.category}
+
+                          </span>
+
+                          <span
+
+                            className={`px-3 py-1 rounded-full text-sm ${priorityColor[task.priority]}`}
+
+                          >
+
+                            {task.priority}
+
+                          </span>
+
+                        </div>
+
+                      </div>
+
+                    </div>
+
+                    <button
+
+                      onClick={() => deleteTask(task.id)}
+
+                      className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition"
+
+                    >
+
+                      Delete
+
+                    </button>
+
+                  </div>
+
+                ))
+
+              )}
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  );
+
+}
